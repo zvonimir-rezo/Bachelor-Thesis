@@ -1,0 +1,141 @@
+---
+title: "Grafovi"
+output: html_notebook
+---
+
+
+```{r}
+statistikaIgraca <- statistikaIgraca[statistikaIgraca$Name %in% muskarciImena, ]
+statistikaIgraca <- merge(statistikaIgraca, totalWL[, c(1,4)], by.x = "Name", by.y = "Player", all.x = TRUE)
+statistikaIgraca$WinPercent <- statistikaIgraca$WinPercent*100
+
+statistikaIgraca <- merge(statistikaIgraca, breakPrilike2[, c(1,4)], by.x = "Name", by.y = "Home", all.x = T)
+statistikaIgraca$PostotakIskoristenih <- statistikaIgraca$PostotakIskoristenih*100
+
+statistikaIgraca <- merge(statistikaIgraca, totalPlayerNextTwoPoints[, c(1,4)], by.x = "Name", by.y = "Player", all.x = T)
+
+drops <- c("UkupnoServisa", "ukupnoOsvojenihPoenaNaServisu", "UkupnoProtivnikovihServisa", "UkupnoOsvojenihNaProtivnikovom")
+
+### U statistikaZavrsenihMeceva stoji sve, a u samoBitni samo bitni podatci
+statistikaIgraca <- statistikaIgraca[, !(names(statistikaIgraca) %in% drops) ]
+
+
+statistikaIgraca <- merge(statistikaIgraca, statistikaServisaPodloga[, c(1,4,7,10)], by.x = "Name", by.y = "Home", all.x = T)
+names(statistikaIgraca)[7] <- "BetonServis"
+names(statistikaIgraca)[8] <- "ZemljaServis"
+names(statistikaIgraca)[9] <- "TravaServis"
+
+
+
+statistikaIgraca <- merge(statistikaIgraca, betonPoeniNaProtivnikovom[, c(1,4)], by.x = "Name", by.y = "Home", all.x = T)
+statistikaIgraca <- merge(statistikaIgraca, zemljaPoeniNaProtivnikovom[, c(1,4)], by.x = "Name", by.y = "Home", all.x = T)
+statistikaIgraca <- merge(statistikaIgraca, travaPoeniNaProtivnikovom[, c(1,4)], by.x = "Name", by.y = "Home", all.x = T)
+names(statistikaIgraca)[10] <- "BetonReturn"
+names(statistikaIgraca)[11] <- "ZemljaReturn"
+names(statistikaIgraca)[12] <- "TravaReturn"
+
+names(statistikaIgraca)[5] <- "PostotakBreakLopti"
+names(statistikaIgraca)[6] <- "PostotakNakonVodstva"
+
+```
+
+### Prikaz varijabli
+```{r}
+
+library(ggplot2)
+library(hrbrthemes)
+library(dplyr)
+library(tidyr)
+library(viridis)
+
+p1 <- ggplot(statistikaIgraca, aes(x=x) ) +
+  # Top
+  geom_density( aes(x = postotakOsvojenogServisa, y = ..density..), fill="#69b3a2" ) +
+  geom_label( aes(x=40, y=0.07, label="Postotak na servisu"), color="#69b3a2") +
+  # Bottom
+  geom_density( aes(x = postotakOsvojenihNaProtivnikovom, y = -..density..), fill= "#404080") +
+  geom_label( aes(x=60, y=-0.1, label="Postotak na primanju servisa"), color="#404080") +
+  theme_ipsum() +
+  xlab("Postotak")
+
+
+p2 <- ggplot(statistikaIgraca, aes(x=x) ) +
+  # Top
+  geom_density( aes(x = PostotakBreakLopti, y = ..density..), fill= "#69b3a2") +
+  geom_label( aes(x=60, y=0.05, label="Iskorištene break lopte"), color="#69b3a2") +
+  # Bottom
+  geom_density( aes(x = PostotakNakonVodstva, y = -..density..), fill= "#404080") +
+  geom_label( aes(x=30, y=-0.05, label="Poen nakon vodstva na servisu"), color="#404080") +
+  theme_ipsum() +
+  xlab("Postotak")
+
+p1
+p2
+
+```
+
+### Aritmeticke sredine podataka servisa
+```{r}
+
+mean(statistikaIgraca[,"ZemljaServis"], na.rm = TRUE)
+mean(statistikaIgraca[,"BetonServis"], na.rm = TRUE)
+mean(statistikaIgraca[,"TravaServis"], na.rm = TRUE)
+mean(statistikaIgraca[,"postotakOsvojenogServisa"], na.rm = TRUE)
+
+koefTravaServis <- mean(statistikaIgraca[,"TravaServis"], na.rm = TRUE) / mean(statistikaIgraca[,"postotakOsvojenogServisa"], na.rm = TRUE)
+
+t.test(statistikaIgraca$TravaServis, statistikaIgraca$postotakOsvojenogServisa, alt="greater", var.equal = FALSE)
+
+
+```
+
+### Aritmeticke sredine podataka returna
+```{r}
+
+mean(statistikaIgraca[,"ZemljaReturn"], na.rm = TRUE)
+mean(statistikaIgraca[,"BetonReturn"], na.rm = TRUE)
+mean(statistikaIgraca[,"TravaReturn"], na.rm = TRUE)
+mean(statistikaIgraca[,"postotakOsvojenihNaProtivnikovom"], na.rm = TRUE)
+
+t.test(statistikaIgraca$TravaReturn, statistikaIgraca$postotakOsvojenihNaProtivnikovom, alt="greater", var.equal = FALSE)
+
+```
+
+### Aritmeticke sredine podataka break lopti
+```{r}
+
+koefVodstvo <- mean(statistikaIgraca[,"PostotakNakonVodstva"], na.rm = TRUE) / mean(statistikaIgraca[,"postotakOsvojenogServisa"], na.rm = TRUE)
+
+t.test(statistikaIgraca$PostotakNakonVodstva, statistikaIgraca$postotakOsvojenogServisa, alt="greater", var.equal = FALSE)
+
+```
+
+### Aritmeticke sredine podataka break lopti
+```{r}
+
+
+koefBreakLopte <- mean(statistikaIgraca[,"PostotakBreakLopti"], na.rm = TRUE) / mean(statistikaIgraca[,"postotakOsvojenihNaProtivnikovom"], na.rm = TRUE)
+
+t.test(statistikaIgraca$postotakOsvojenihNaProtivnikovom, statistikaIgraca$PostotakBreakLopti, alt="greater", var.equal = FALSE)
+
+```
+
+### Korelacije
+```{r}
+library(corrplot)
+library(RColorBrewer)
+statistikaIgraca2 <- statistikaIgraca
+statistikaIgraca2 <- statistikaIgraca2[, c(1,2,3,4,7,8,9,10,11,12,5,6)]
+names(statistikaIgraca2) <- c("Name", "OPS", "OPR", "PPM", "OPSB", "OPSZ", "OPST", "OPR-B", "OPR-Z", "OPR-T", "IBL", "PNV")
+
+statistikaIgraca2 <- na.omit(statistikaIgraca2)
+
+# for(i in 1:ncol(statistikaIgracaMuski2)){
+#   statistikaIgracaMuski2[is.na(statistikaIgracaMuski2[,i]), i] <- mean(statistikaIgracaMuski2[,i], na.rm = TRUE)
+# }
+
+corr <- round(cor(statistikaIgraca2[, 2:ncol(statistikaIgraca2)]), 2)
+
+corrplot(corr, method="circle", tl.col = "black")
+
+```

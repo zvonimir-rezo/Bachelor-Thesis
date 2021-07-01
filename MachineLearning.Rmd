@@ -1,0 +1,673 @@
+---
+title: "MachineLearning"
+output: html_notebook
+---
+
+# Machine learning
+
+### Popunjavanje NA vrijednosti
+```{r}
+
+statistikaMecevaMuskarci <- samoBitniMuskarci
+
+### SERVIS HOME
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "BetonServisHome"])) {
+    statistikaMecevaMuskarci[i,"BetonServisHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaHome"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "ZemljaServisHome"])) {
+    statistikaMecevaMuskarci[i,"ZemljaServisHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaHome"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "TravaServisHome"])) {
+    statistikaMecevaMuskarci[i,"TravaServisHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaHome"] * koefTravaServis
+  }
+}
+
+### SERVIS AWAY
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "BetonServisAway"])) {
+    statistikaMecevaMuskarci[i,"BetonServisAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaAway"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "ZemljaServisAway"])) {
+    statistikaMecevaMuskarci[i,"ZemljaServisAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaAway"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "TravaServisAway"])) {
+    statistikaMecevaMuskarci[i,"TravaServisAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaAway"] * koefTravaServis
+  }
+}
+
+### RETURN HOME
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "BetonReturnHome"])) {
+    statistikaMecevaMuskarci[i,"BetonReturnHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnHome"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "ZemljaReturnHome"])) {
+    statistikaMecevaMuskarci[i,"ZemljaReturnHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnHome"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "TravaReturnHome"])) {
+    statistikaMecevaMuskarci[i,"TravaReturnHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnHome"]
+  }
+}
+
+### RETURN AWAY
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "BetonReturnAway"])) {
+    statistikaMecevaMuskarci[i,"BetonReturnAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnAway"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "ZemljaReturnAway"])) {
+    statistikaMecevaMuskarci[i,"ZemljaReturnAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnAway"]
+  }
+}
+
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "TravaReturnAway"])) {
+    statistikaMecevaMuskarci[i,"TravaReturnAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnAway"]
+  }
+}
+
+### BREAK HOME
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "PostotakIskoristenihBreakovaHome"])) {
+    statistikaMecevaMuskarci[i,"PostotakIskoristenihBreakovaHome"] <- (statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnHome"] * koefBreakLopte) / 100
+  }
+}
+
+### BREAK AWAY
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "PostotakIskoristenihBreakovaAway"])) {
+    statistikaMecevaMuskarci[i,"PostotakIskoristenihBreakovaAway"] <- (statistikaMecevaMuskarci[i, "PostotakOsvojenihReturnAway"] * koefBreakLopte) / 100
+  }
+}
+
+### VODSTVO HOME
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "PoenNakonVodstvaNaServisuHome"])) {
+    statistikaMecevaMuskarci[i,"PoenNakonVodstvaNaServisuHome"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaHome"] * koefVodstvo
+  }
+}
+
+### VODSTVO AWAY
+for(i in 1:nrow(statistikaMecevaMuskarci)){
+  if (is.na(statistikaMecevaMuskarci[i, "PoenNakonVodstvaNaServisuAway"])) {
+    statistikaMecevaMuskarci[i,"PoenNakonVodstvaNaServisuAway"] <- statistikaMecevaMuskarci[i, "PostotakOsvojenogServisaAway"] * koefVodstvo
+  }
+}
+
+
+```
+
+### One Hot Encoding
+```{r}
+
+statistikaMecevaMuskarci["Beton"] <- ifelse(statistikaMecevaMuskarci$CategoryID == 1, 1, 0)
+statistikaMecevaMuskarci["Zemlja"] <- ifelse(statistikaMecevaMuskarci$CategoryID == 2, 1, 0)
+statistikaMecevaMuskarci["Trava"] <- ifelse(statistikaMecevaMuskarci$CategoryID == 3, 1, 0)
+
+statistikaMecevaMuskarci["CategoryID"] <- NULL
+
+
+```
+
+### Training i test set, feature scaling
+```{r}
+library(caTools)
+### Razdvajanje u training  i test set
+set.seed(150)
+
+split = sample.split(statistikaMecevaMuskarci$Pobjednik, SplitRatio = 0.8)
+training_set = subset(statistikaMecevaMuskarci, split == T)
+test_set = subset(statistikaMecevaMuskarci, split == F)
+
+### Feature Scaling
+relevantniStupci <- c("Beton", "Zemlja", "Trava", "PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "WinPercentHome", "WinPercentAway", "BetonServisHome", "ZemljaServisHome", "TravaServisHome", "BetonServisAway", "ZemljaServisAway", "TravaServisAway", "BetonReturnHome", "ZemljaReturnHome", "TravaReturnHome", "BetonReturnAway", "ZemljaReturnAway", "TravaReturnAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway")
+
+
+training_set[, names(training_set) %in% relevantniStupci] <- training_set[, names(training_set) %in% relevantniStupci]
+test_set[, names(test_set) %in% relevantniStupci] <- test_set[, names(test_set) %in% relevantniStupci]
+
+training_set[, 5:(ncol(training_set)-4)] <- scale(training_set[, 5:(ncol(training_set)-4)])
+test_set[, 5:(ncol(test_set)-4)] <- scale(test_set[, 5:(ncol(test_set)-4)])
+
+```
+
+## Klasifikacija logistickim modelom
+
+#### 1. pokušaj
+<p>Modelu koji koristi logističku regresiju kao ulazne parametre dajemo samo postotke osvojenih poena na servisu prvog i drugog igrača.</p>
+```{r}
+library(caret)
+### Logistic model
+classifier <- glm(formula = Pobjednik ~ PostotakOsvojenogServisaHome + PostotakOsvojenogServisaAway + PostotakOsvojenihReturnHome + PostotakOsvojenihReturnAway, family = binomial, data = training_set)
+
+### Model na test setu racuna vjerojatnosti, a onda te vjerojatnosti zaokruzujemo na 0 ili 1
+prob_pred <- predict(classifier, type = 'response', newdata = test_set[, !names(test_set) %in% c("Pobjednik")])
+y <- ifelse(prob_pred > 0.5, 1, 0)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion matrix
+cm <- table(test_set[, names(test_set) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+```
+
+#### 2. pokušaj
+<p>Modelu koji koristi logističku regresiju kao ulazne parametre dajemo postotke osvojenih poena na servisu i returnu prvog i drugog igrača.</p>
+<p>Dobili smo za nekih 3% veći postotak pogođenih ishoda što nam govori da učinkovitost igrača na primanju servisa igra ipak dosta veliku ulogu pri predviđanju ishoda meča.</p>
+```{r}
+### Logistic model
+library(caret)
+classifier <- glm(formula = Pobjednik ~ Beton + Zemlja + Trava + PostotakOsvojenogServisaHome + PostotakOsvojenogServisaAway + PostotakOsvojenihReturnHome + PostotakOsvojenihReturnAway + WinPercentHome + WinPercentAway + BetonServisHome + ZemljaServisHome + TravaServisHome + BetonServisAway + ZemljaServisAway + TravaServisAway + BetonReturnHome + ZemljaReturnHome + TravaReturnHome + BetonReturnAway + ZemljaReturnAway + TravaReturnAway + PostotakIskoristenihBreakovaHome + PostotakIskoristenihBreakovaAway + PoenNakonVodstvaNaServisuHome + PoenNakonVodstvaNaServisuAway, family = binomial, data = training_set)
+
+
+### Model na test setu racuna vjerojatnosti, a onda te vjerojatnosti zaokruzujemo na 0 ili 1
+prob_pred <- predict(classifier, type = 'response', newdata = test_set[, !names(test_set) %in% c("Pobjednik")])
+y <- ifelse(prob_pred > 0.5, 1, 0)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion matrix
+cm <- table(test_set[, names(test_set) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+```
+#### 3. pokušaj
+<p>Modelu koji koristi logističku regresiju kao ulazne parametre dajemo postotke osvojenih poena na servisu i returnu prvog i drugog igrača te postotke po podlogama.</p>
+```{r}
+### Logistic model
+classifier <- glm(formula = Pobjednik ~  PostotakIskoristenihBreakovaHome + PostotakIskoristenihBreakovaAway + PoenNakonVodstvaNaServisuHome + PoenNakonVodstvaNaServisuAway, family = binomial, data = training_set)
+
+
+### Model na test setu racuna vjerojatnosti, a onda te vjerojatnosti zaokruzujemo na 0 ili 1
+prob_pred <- predict(classifier, type = 'response', newdata = test_set[, !names(test_set) %in% c("Pobjednik")])
+y <- ifelse(prob_pred > 0.5, 1, 0)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion matrix
+cm <- table(test_set[, names(test_set) %in% c("Pobjednik")], y)
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+```
+
+
+## Klasifikacija K-NN
+#### 1.pokušaj
+<p>Koristimo samo postotke osvojenog servisa za prvog i drugog igrača</p>
+<p>Dobili smo otprilike isti postotak pogođenosti kao i kod logističke regresije kada smo koristili samo servise igrača. Najbolje rezultate dobivamo za k = 49, možda treba još malo isprobavati. </p>
+```{r}
+### K-NN
+
+library(class)
+
+training_set_knn <- training_set[!is.na(training_set$PostotakOsvojenogServisaHome) & !is.na(training_set$PostotakOsvojenogServisaAway), ]
+test_set_knn <- test_set[!is.na(test_set$PostotakOsvojenogServisaHome) & !is.na(test_set$PostotakOsvojenogServisaAway), ]
+
+training_set_temp <- training_set_knn[, names(training_set_knn) %in% c("PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway")]
+test_set_temp <- test_set_knn[, names(test_set_knn) %in% c("PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway")]
+dependent_var_training <- training_set_knn[, names(training_set_knn) %in% c("Pobjednik")]
+dependent_var_test <- test_set_knn[, names(test_set_knn) %in% c("Pobjednik")]
+
+y <- knn(train = training_set_temp, test = test_set_temp, cl = dependent_var_training, k = 33)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(dependent_var_test, y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+
+```
+
+#### 2.pokušaj
+<p>Koristimo postotke osvojenog servisa te postotke osvojenih poena na reternu za prvog i drugog igrača</p>
+<p>Dobili smo otprilike isti postotak pogođenosti kao i kod logističke regresije kada smo koristili samo servise igrača. Najbolje rezultate dobivamo za k = 43, možda treba još malo isprobavati. </p>
+```{r}
+### K-NN
+
+library(class)
+
+training_set_knn <- training_set[!is.na(training_set$PostotakOsvojenogServisaHome) & !is.na(training_set$PostotakOsvojenogServisaAway), ]
+test_set_knn <- test_set[!is.na(test_set$PostotakOsvojenogServisaHome) & !is.na(test_set$PostotakOsvojenogServisaAway), ]
+
+training_set_temp <- training_set_knn[, names(training_set_knn) %in% c("Beton", "Zemlja", "Trava", "PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "WinPercentHome", "WinPercentAway", "BetonServisHome", "ZemljaServisHome", "TravaServisHome", "BetonServisAway", "ZemljaServisAway", "TravaServisAway", "BetonReturnHome", "ZemljaReturnHome", "TravaReturnHome", "BetonReturnAway", "ZemljaReturnAway", "TravaReturnAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway")]
+test_set_temp <- test_set_knn[, names(test_set_knn) %in% c("Beton", "Zemlja", "Trava", "PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "WinPercentHome", "WinPercentAway", "BetonServisHome", "ZemljaServisHome", "TravaServisHome", "BetonServisAway", "ZemljaServisAway", "TravaServisAway", "BetonReturnHome", "ZemljaReturnHome", "TravaReturnHome", "BetonReturnAway", "ZemljaReturnAway", "TravaReturnAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway")]
+dependent_var_training <- training_set_knn[, names(training_set_knn) %in% c("Pobjednik")]
+dependent_var_test <- test_set_knn[, names(test_set_knn) %in% c("Pobjednik")]
+
+y <- knn(train = training_set_temp, test = test_set_temp, cl = dependent_var_training, k = 40)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set_knn[, names(test_set_knn) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+
+```
+
+```{r}
+
+### K-NN
+
+library(class)
+
+training_set_knn <- training_set[!is.na(training_set$PostotakOsvojenogServisaHome) & !is.na(training_set$PostotakOsvojenogServisaAway), ]
+test_set_knn <- test_set[!is.na(test_set$PostotakOsvojenogServisaHome) & !is.na(test_set$PostotakOsvojenogServisaAway), ]
+
+training_set_temp <- training_set_knn[, names(training_set_knn) %in% c("WinPercentHome", "WinPercentAway")]
+test_set_temp <- test_set_knn[, names(test_set_knn) %in% c("WinPercentHome", "WinPercentAway")]
+dependent_var_training <- training_set_knn[, names(training_set_knn) %in% c("Pobjednik")]
+dependent_var_test <- test_set_knn[, names(test_set_knn) %in% c("Pobjednik")]
+
+y <- knn(train = training_set_temp, test = test_set_temp, cl = dependent_var_training, k = 30)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set_knn[, names(test_set_knn) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+
+```
+
+
+## SVM
+#### 1.pokušaj
+<p>Koristimo postotke osvojenog servisa za prvog i drugog igrača</p>
+```{r}
+### SVM
+
+library(e1071)
+
+koristeni_stupci <- c("PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "WinPercentHome", "WinPercentAway", "Pobjednik")
+
+test_set_temp <- test_set[, names(test_set) %in% koristeni_stupci]
+
+
+classifier <- svm(formula = Pobjednik ~ ., data = training_set[, names(training_set) %in% koristeni_stupci], type = 'C-classification', kernel = 'polynomial')
+
+
+y <- predict(classifier, newdata = test_set_temp[, !names(test_set_temp) %in% c("Pobjednik")])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set_temp[, names(test_set_temp) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+
+```
+#### 2.pokušaj
+<p>Koristimo postotke osvojenih poena na servisu i na reternu za prvog i drugog igrača</p>
+```{r}
+### SVM
+
+library(e1071)
+
+koristeni_stupci <- c("Beton", "Zemlja", "Trava", "PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "WinPercentHome", "WinPercentAway", "BetonServisHome", "ZemljaServisHome", "TravaServisHome", "BetonServisAway", "ZemljaServisAway", "TravaServisAway", "BetonReturnHome", "ZemljaReturnHome", "TravaReturnHome", "BetonReturnAway", "ZemljaReturnAway", "TravaReturnAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway", "Pobjednik")
+
+test_set_temp <- test_set[, names(test_set) %in% koristeni_stupci]
+
+
+classifier <- svm(formula = Pobjednik ~ ., data = training_set[, names(training_set) %in% koristeni_stupci], type = 'C-classification', kernel = 'linear')
+
+
+y <- predict(classifier, newdata = test_set_temp[, !names(test_set_temp) %in% c("Pobjednik")])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set_temp[, names(test_set_temp) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+
+```
+
+## Naive Bayes
+#### 1.pokušaj
+<p>Koristimo postotke osvojenog servisa za prvog i drugog igrača</p>
+```{r}
+### NAIVE BAYES
+
+library(e1071)
+
+koristeni_stupci <- c("PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "Pobjednik")
+
+test_set_temp <- test_set[, names(test_set) %in% koristeni_stupci]
+
+
+classifier <- naiveBayes(x = training_set[, names(training_set) %in% koristeni_stupci[-3]], y = training_set$Pobjednik)
+
+y <- predict(classifier, newdata = test_set_temp[, !names(test_set_temp) %in% c("Pobjednik")])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set_temp[, names(test_set_temp) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+```
+
+
+```{r}
+### NAIVE BAYES
+
+library(e1071)
+
+koristeni_stupci <- c( "PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "Pobjednik")
+
+test_set_temp <- test_set[, names(test_set) %in% koristeni_stupci]
+
+
+classifier <- naiveBayes(x = training_set[, names(training_set) %in% koristeni_stupci[-5]], y = training_set$Pobjednik)
+
+y <- predict(classifier, newdata = test_set_temp[, !names(test_set_temp) %in% c("Pobjednik")])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set_temp[, names(test_set_temp) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+
+```
+#### 2.pokušaj
+<p>Koristimo postotke osvojenih poena na servisu i na reternu za prvog i drugog igrača</p>
+```{r}
+### NAIVE BAYES
+
+library(e1071)
+
+koristeni_stupci <- c( "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway", "Pobjednik")
+
+
+test_set_temp <- test_set[, names(test_set) %in% koristeni_stupci]
+
+
+classifier <- naiveBayes(x = training_set[, names(training_set) %in% koristeni_stupci[-length(koristeni_stupci)]], y = training_set$Pobjednik)
+
+
+y <- predict(classifier, newdata = test_set_temp[, !names(test_set_temp) %in% c("Pobjednik")])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+
+### Confusion Matrix
+cm <- table(test_set_temp[, names(test_set_temp) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+```
+#### 2.pokušaj
+<p>Koristimo postotke osvojenih poena na servisu i na reternu za prvog i drugog igrača</p>
+```{r}
+### NAIVE BAYES
+
+library(e1071)
+
+koristeni_stupci <- c("WinPercentHome", "WinPercentAway", "Pobjednik")
+
+
+test_set_temp <- test_set[, names(test_set) %in% koristeni_stupci]
+
+
+classifier <- naiveBayes(x = training_set[, names(training_set) %in% koristeni_stupci[-length(koristeni_stupci)]], y = training_set$Pobjednik)
+
+
+y <- predict(classifier, newdata = test_set_temp[, !names(test_set_temp) %in% c("Pobjednik")])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+
+### Confusion Matrix
+cm <- table(test_set_temp[, names(test_set_temp) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+```
+
+
+## Random Forest
+#### 1.pokušaj
+<p>Koristimo postotke osvojenog servisa za prvog i drugog igrača</p>
+```{r}
+library(randomForest)
+
+koristeni_stupci <- c("PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "Pobjednik")
+
+classifier <- randomForest(x = training_set[, names(training_set) %in% koristeni_stupci[-3]], y = as.factor(training_set$Pobjednik), ntree = 100)
+
+y <- predict(classifier, newdata = test_set[, names(test_set) %in% koristeni_stupci[-3]])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set[, names(test_set) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+```
+#### 2.pokušaj
+<p>Koristimo postotke osvojenih poena na servisu i na reternu za prvog i drugog igrača</p>
+```{r}
+library(randomForest)
+
+koristeni_stupci <- c("PostotakOsvojenogServisaHome", "PostotakOsvojenogServisaAway", "PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "WinPercentHome", "WinPercentAway", "BetonServisHome", "ZemljaServisHome", "TravaServisHome", "BetonServisAway", "ZemljaServisAway", "TravaServisAway", "BetonReturnHome", "ZemljaReturnHome", "TravaReturnHome", "BetonReturnAway", "ZemljaReturnAway", "TravaReturnAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway", "Pobjednik")
+
+classifier <- randomForest(x = training_set[, names(training_set) %in% koristeni_stupci[-length(koristeni_stupci)]], y = as.factor(training_set$Pobjednik), ntree = 20)
+
+y <- predict(classifier, newdata = test_set[, names(test_set) %in% koristeni_stupci[-length(koristeni_stupci)]])
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set[, names(test_set) %in% c("Pobjednik")], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+```
+
+
+## Artificial Neural Network
+#### 1.pokušaj
+<p>Koristimo postotke osvojenog servisa za prvog i drugog igrača</p>
+```{r}
+library(h2o)
+
+koristeni_stupci <- c("Beton", "Zemlja", "Trava", "BetonServisHome", "ZemljaServisHome", "TravaServisHome", "BetonServisAway", "ZemljaServisAway", "TravaServisAway", "BetonReturnHome", "ZemljaReturnHome", "TravaReturnHome", "BetonReturnAway", "ZemljaReturnAway", "TravaReturnAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway", "Pobjednik")
+
+### ANN klasifikacija
+h2o.init(nthreads = -1)
+
+classifier <- h2o.deeplearning(y = 'Pobjednik', training_frame = as.h2o(training_set[, names(training_set) %in% koristeni_stupci]), activation = 'Rectifier', hidden = c(10), epochs = 100, train_samples_per_iteration = -2)
+
+
+y <- h2o.predict(classifier, newdata = as.h2o(test_set[, names(test_set) %in% koristeni_stupci[-length(koristeni_stupci)]]))
+y <- (y > 0.5)
+y <- as.vector(y)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set[, "Pobjednik"], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+h2o.shutdown()
+
+```
+
+
+#### 2.pokušaj
+<p>Koristimo postotke osvojenog servisa i reterna za prvog i drugog igrača</p>
+```{r}
+library(h2o)
+
+
+koristeni_stupci <- c("PostotakOsvojenihReturnHome", "PostotakOsvojenihReturnAway", "Pobjednik")
+
+### ANN klasifikacija
+#h2o.init(nthreads = -1)
+
+classifier <- h2o.deeplearning(y = 'Pobjednik', training_frame = as.h2o(training_set[, names(training_set) %in% koristeni_stupci]), activation = 'Rectifier', hidden = c(5), epochs = 10, train_samples_per_iteration = -2)
+
+
+y <- h2o.predict(classifier, newdata = as.h2o(test_set[, names(test_set) %in% koristeni_stupci[-length(koristeni_stupci)]]))
+y <- (y > 0.5)
+y <- as.vector(y)
+
+print(confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"])))
+
+
+
+### Confusion Matrix
+cm <- table(test_set[, "Pobjednik"], y)
+
+library(yardstick)
+library(ggplot2)
+library(base)
+
+cm2 <- confusionMatrix(as.factor(y), as.factor(test_set[, "Pobjednik"]), dnn = c("Predviđanje", "Stvarni rezultat"))
+
+plt <- as.data.frame(cm2$table)
+plt$Prediction <- factor(plt$Prediction, levels=rev(levels(plt$Prediction)))
+
+ggplot(plt, aes(Prediction,Reference, fill= Freq)) +
+        geom_tile() + geom_text(aes(label=Freq)) +
+        scale_fill_gradient(low="white", high="#009194") +
+        labs(x = "Reference",y = "Prediction") +
+        scale_x_discrete(labels=c("Class_1","Class_2","Class_3","Class_4")) +
+        scale_y_discrete(labels=c("Class_4","Class_3","Class_2","Class_1"))
+
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+#h2o.shutdown()
+
+```
+
+#### 3.pokušaj
+<p>Koristimo sve varijable</p>
+```{r}
+library(h2o)
+
+koristeni_stupci <- c("WinPercentHome", "WinPercentAway", "PostotakIskoristenihBreakovaHome", "PostotakIskoristenihBreakovaAway", "PoenNakonVodstvaNaServisuHome", "PoenNakonVodstvaNaServisuAway", "Pobjednik")
+
+### ANN klasifikacijan
+h2o.init(nthreads = -1)
+
+classifier <- h2o.deeplearning(y = 'Pobjednik', training_frame = as.h2o(training_set[, names(training_set) %in% koristeni_stupci]), activation = 'TanhWithDropout', hidden = c(10), epochs = 100, train_samples_per_iteration = -2)
+
+
+y <- h2o.predict(classifier, newdata = as.h2o(test_set[, names(test_set) %in% koristeni_stupci[-length(koristeni_stupci)]]))
+y <- (y > 0.5)
+y <- as.vector(y)
+
+library(caret)
+print(confusionMatrix(data=as.factor(y), reference=as.factor(test_set[, "Pobjednik"])))
+
+### Confusion Matrix
+cm <- table(test_set[, "Pobjednik"], y)
+
+print("Confusion Matrix:")
+print(cm)
+
+print(paste0("Postotak pogođenih ishoda je: ", (cm[1] + cm[4]) / sum(cm)))
+print(paste0("Sensitivity: ", cm[4] / (cm[2] + cm[4])))
+print(paste0("Specificity: ", cm[1] / (cm[1] + cm[3])))
+# h2o.shutdown()
+
+```
+<p> Korištenjem ANN za klasifikaciju dobivamo naznake da ostale varijable daju neki utjecaj jer model radi bolju predikciju sa više varijabli </p>
+

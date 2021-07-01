@@ -1,0 +1,182 @@
+---
+title: "Building Common Opponent Model"
+output: html_notebook
+---
+
+### Common opponent model function
+```{r}
+library(stringr)
+
+odrediPobjednika <- function(x){
+  # Funkcija dodaje novi stupac u kojem zapisuje 1 ako je pobjedio Home,a 0 ako je pobjedio Away
+  result <- x[4]
+  
+  if(word(result, -1) == "0-0"){
+    finalSet <- word(result, -2)
+  } else {
+    finalSet <- word(result, -1)
+  }
+  
+  homeScore <- strtoi(word(finalSet, 1,sep = "\\-"))
+  awayScore <- strtoi(word(finalSet, -1,sep = "\\-"))
+  
+  if(homeScore > awayScore){
+    x[9] <- 1
+  } else if(homeScore < awayScore){
+    x[9] <- 0
+  } 
+}
+
+
+zajednickiProtivnici <- function(player1, player2) {
+  # Funkcija stvara tablicu imena igrača koji su zajednički protivnici igračima player1 i player2
+  commonOpponentPlayer1 <- samoBitni[str_detect(samoBitni$Home, player1) | str_detect(samoBitni$Away, player1), c(1,2,3)]
+  
+  co1 <- c(commonOpponentPlayer1[, "Home"], commonOpponentPlayer1[, "Away"])
+  co1 <- co1[co1 !=  player1 & co1 != player2]
+  
+  commonOpponentPlayer2 <- samoBitni[str_detect(samoBitni$Home, player2) | str_detect(samoBitni$Away, player2), c(1,2,3)]
+  
+  commonOpponent <- co1[co1 %in% commonOpponentPlayer2$Home | co1 %in% commonOpponentPlayer2$Away]
+  co <- as.data.frame(commonOpponent)
+  co <- as.data.frame(co[!duplicated(co$commonOpponent), ])
+  names(co)[1] <- "Name"
+  co
+}
+
+
+### FUNKCIJA KOJA SKALIRA PODATKE PO PODLOGAMA NA OSNOVU TOGA NA KOJOJ SE PODLOZI IGRA MEC
+### Skaliranja preuzeta iz Sipko, Michal, and William Knottenbelt. "Machine learning for the prediction of professional tennis matches." MEng computing-final year project, Imperial College London (2015). str.18
+skalirajPodlogu <- function(t) {
+  print(as.double(t["BetonServisHome"]))
+  if (t["CategoryID"] == 1) {
+    t["ZemljaServisHome"] <- as.double(t["ZemljaServisHome"]) * 0.28
+    t["ZemljaReturnHome"] <- as.double(t["ZemljaReturnHome"]) * 0.28
+    t["ZemljaServisAway"] <- as.double(t["ZemljaServisAway"]) * 0.28
+    t["ZemljaReturnAway"] <- as.double(t["ZemljaReturnAway"]) * 0.28
+    
+    t["TravaServisHome"] <- as.double(t["TravaServisHome"]) * 0.24
+    t["TravaReturnHome"] <- as.double(t["TravaReturnHome"]) * 0.24
+    t["TravaServisAway"] <- as.double(t["TravaServisAway"]) * 0.24
+    t["TravaReturnAway"] <- as.double(t["TravaReturnAway"]) * 0.24
+  } else if (t["CategoryID"] == 2) {
+    t["BetonServisHome"] <- as.double(t["BetonServisHome"]) * 0.28
+    t["BetonReturnHome"] <- as.double(t["BetonReturnHome"]) * 0.28
+    t["BetonServisAway"] <- as.double(t["BetonServisAway"]) * 0.28
+    t["BetonReturnAway"] <- as.double(t["BetonReturnAway"]) * 0.28
+    
+    t["TravaServisHome"] <- as.double(t["TravaServisHome"]) * 0.14
+    t["TravaReturnHome"] <- as.double(t["TravaReturnHome"]) * 0.14
+    t["TravaServisAway"] <- as.double(t["TravaServisAway"]) * 0.14
+    t["TravaReturnAway"] <- as.double(t["TravaReturnAway"]) * 0.14
+  } else if (t["CategoryID"] == 3) {
+    t["BetonServisHome"] <- as.double(t["BetonServisHome"]) * 0.24
+    t["BetonReturnHome"] <- as.double(t["BetonReturnHome"]) * 0.24
+    t["BetonServisAway"] <- as.double(t["BetonServisAway"]) * 0.24
+    t["BetonReturnAway"] <- as.double(t["BetonReturnAway"]) * 0.24
+    
+    t["ZemljaServisHome"] <- as.double(t["ZemljaServisHome"]) * 0.14
+    t["ZemljaReturnHome"] <- as.double(t["ZemljaReturnHome"]) * 0.14
+    t["ZemljaServisAway"] <- as.double(t["ZemljaServisAway"]) * 0.14
+    t["ZemljaReturnAway"] <- as.double(t["ZemljaReturnAway"]) * 0.14
+  }
+}
+
+```
+
+#### Stvaranje tablice sa svim zanimljivim podatcima o igracima
+<p>Ideja je ubaciti u ovu tablicu sve zanimljive podatke koje cemo poslije koristiti za prediktivne modele</p>
+```{r}
+###punimo
+library(dplyr)
+statistikaZavrsenihMeceva <- statistikaVlastitiProtivnik
+
+
+statistikaZavrsenihMeceva <- merge(statistikaZavrsenihMeceva, totalWL, by.x = "Home", by.y = "Player", all.x = TRUE)
+names(statistikaZavrsenihMeceva)[10] <- "MatchesWonHome"
+names(statistikaZavrsenihMeceva)[11] <- "MatchesLostHome"
+names(statistikaZavrsenihMeceva)[12] <- "WinPercentHome"
+names(statistikaZavrsenihMeceva)[13] <- "MatchesPlayedHome"
+statistikaZavrsenihMeceva <- statistikaZavrsenihMeceva[, c(2,1,3,4,5,6,7,8,9,10,11,13,12)]
+statistikaZavrsenihMeceva <- merge(statistikaZavrsenihMeceva, totalWL, by.x = "Away", by.y = "Player", all.x = TRUE)
+statistikaZavrsenihMeceva <- statistikaZavrsenihMeceva[, c(2,3,1,4,5,6,7,8,10,11,12,13,14,15,17,16,9)]
+names(statistikaZavrsenihMeceva)[13] <- "MatchesWonAway"
+names(statistikaZavrsenihMeceva)[14] <- "MatchesLostAway"
+names(statistikaZavrsenihMeceva)[15] <- "MatchesPlayedAway"
+names(statistikaZavrsenihMeceva)[16] <- "WinPercentAway"
+
+
+
+drops <- c("MatchesWonHome", "MatchesLostHome", "MatchesPlayedHome", "MatchesWonAway", "MatchesLostAway", "MatchesPlayedAway")
+
+### U statistikaZavrsenihMeceva stoji sve, a u samoBitni samo bitni podatci
+samoBitni <- statistikaZavrsenihMeceva[, !(names(statistikaZavrsenihMeceva) %in% drops) ]
+
+### Spajanje za postotak osvojenih poena po podlogama na servisu
+samoBitni <- merge(samoBitni, statistikaServisaPodloga[, c(1,4,7,10)], by.x = "Home", by.y = "Home", all.x = T)
+names(samoBitni)[12] <- "BetonServisHome"
+names(samoBitni)[13] <- "ZemljaServisHome"
+names(samoBitni)[14] <- "TravaServisHome"
+samoBitni <- merge(samoBitni, statistikaServisaPodloga[, c(1,4,7,10)], by.x = "Away", by.y = "Home", all.x = T)
+names(samoBitni)[15] <- "BetonServisAway"
+names(samoBitni)[16] <- "ZemljaServisAway"
+names(samoBitni)[17] <- "TravaServisAway"
+samoBitni <- samoBitni[, c(3,2,1,4,5,6,7,8,9,10,12,13,14,15,16,17,11)]
+
+
+### Spajanje za postotak osvojenih poena na reternu po podlozi
+samoBitni <- merge(samoBitni, betonPoeniNaProtivnikovom[, c(1,4)], by.x = "Home", by.y = "Home", all.x = T)
+names(samoBitni)[18] <- "BetonReturnHome"
+samoBitni <- merge(samoBitni, betonPoeniNaProtivnikovom[, c(1,4)], by.x = "Away", by.y = "Home", all.x = T)
+names(samoBitni)[19] <- "BetonReturnAway"
+samoBitni <- merge(samoBitni, zemljaPoeniNaProtivnikovom[, c(1,4)], by.x = "Home", by.y = "Home", all.x = T)
+names(samoBitni)[20] <- "ZemljaReturnHome"
+samoBitni <- merge(samoBitni, zemljaPoeniNaProtivnikovom[, c(1,4)], by.x = "Away", by.y = "Home", all.x = T)
+names(samoBitni)[21] <- "ZemljaReturnAway"
+samoBitni <- merge(samoBitni, travaPoeniNaProtivnikovom[, c(1,4)], by.x = "Home", by.y = "Home", all.x = T)
+names(samoBitni)[22] <- "TravaReturnHome"
+samoBitni <- merge(samoBitni, travaPoeniNaProtivnikovom[, c(1,4)], by.x = "Away", by.y = "Home", all.x = T)
+names(samoBitni)[23] <- "TravaReturnAway"
+samoBitni <- samoBitni[, c(3,2,1,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,17)]
+
+
+### Spajanje za postotak break lopti
+samoBitni <- merge(samoBitni, breakPrilike2[, c(1,4)], by.x = "Home", by.y = "Home", all.x = T)
+names(samoBitni)[24] <- "PostotakIskoristenihBreakovaHome"
+samoBitni <- merge(samoBitni, breakPrilike2[, c(1,4)], by.x = "Away", by.y = "Home", all.x = T)
+names(samoBitni)[25] <- "PostotakIskoristenihBreakovaAway"
+samoBitni <- samoBitni[, c(3,2,1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24,25,23)]
+
+
+### Spajanje sa podatcima o efikasnosti igraca nakon osvojena prva dva poena na servisu
+samoBitni <- merge(samoBitni, totalPlayerNextTwoPoints[, c(1,4)], by.x = "Home", by.y = "Player", all.x = T)
+names(samoBitni)[26] <- "PoenNakonVodstvaNaServisuHome"
+samoBitni <- merge(samoBitni, totalPlayerNextTwoPoints[, c(1,4)], by.x = "Away", by.y = "Player", all.x = T)
+names(samoBitni)[27] <- "PoenNakonVodstvaNaServisuAway"
+samoBitni <- samoBitni[, c(3,2,1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,26,27,25)]
+names(samoBitni)[5] <- "PostotakOsvojenogServisaHome"
+names(samoBitni)[6] <- "PostotakOsvojenogServisaAway"
+names(samoBitni)[7] <- "PostotakOsvojenihReturnHome"
+names(samoBitni)[8] <- "PostotakOsvojenihReturnAway"
+
+samoBitni$Pobjednik <- apply(samoBitni, 1, odrediPobjednika)
+samoBitni$Pobjednik <- as.numeric(unlist(samoBitni$Pobjednik))
+
+samoBitni <- samoBitni[, c(1,2,3,27,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28)]
+
+samoBitni <- samoBitni[!grepl("A.Carter", samoBitni$Away), ]
+samoBitni <- samoBitni[!is.na(samoBitni$PostotakOsvojenogServisaHome) & !is.na(samoBitni$PostotakOsvojenogServisaAway), ]
+
+samoBitniMuskarci <- samoBitni[samoBitni$Home %in% muskarciImena & samoBitni$Away %in% muskarciImena, ]
+samoBitniZene <- samoBitni[samoBitni$Home %in% zeneImena & samoBitni$Away %in% zeneImena, ]
+
+
+### isprobavanje funkcije zajednickih protivnika
+player1 <- "Djokovic N."
+player2 <- "Gasquet R."
+
+co <- zajednickiProtivnici(player1, player2)
+
+
+```
+

@@ -1,0 +1,513 @@
+---
+title: "Analiza i prediktivno modeliranje teniskih mečeva"
+output: html_notebook
+---
+
+
+### Markov Chain Testing
+
+#### Markov chain homemade functions
+
+```{r} 
+library("markovchain")
+library("dplyr")
+library("igraph")
+library("stringr")
+
+
+
+
+# Matrica prelazaka izmedu stanja, na osnovu nje definiramo markovljev lanac
+
+
+
+# --------------------GET PROBABILITIES FUNCTIONS----------------------------
+
+getPlayerServeProbability <- function(playerName) {
+  # Get point on serve probability for the given player
+  pName <- noquote(playerName)
+  p <- statistikaIgraca[statistikaIgraca$Name == pName, "postotakOsvojenogServisa"]
+  return(p/100)
+}
+
+getPlayerReturnProbability <- function(playerName) {
+  # Get point on return probability for the given player
+  pName <- noquote(playerName)
+  p <- statistikaIgraca[statistikaIgraca$Name == pName, "postotakOsvojenihNaProtivnikovom"]
+  return(p/100)
+}
+
+
+
+
+# --------------------GAME FUNCTIONS----------------------------
+
+generateProbabilitiesMatrixGame <- function(playerServing) {
+  # Generates a transition matrix for use in markov chains
+  decimalP <- getPlayerServeProbability(playerServing)
+  
+  gameProbabilitiesMatrix <- matrix(data = c(0, decimalP, 1-decimalP, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                              0, 0, 0, 1-decimalP, decimalP, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                              0, 0, 0, decimalP, 0, 1-decimalP, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                              0, 0, 0, 0, 0, 0, decimalP, 1-decimalP, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                              0, 0, 0, 0, 0, 0, 1-decimalP, 0, decimalP, 0, 0, 0, 0, 0, 0, 0, 0,
+                                              0, 0, 0, 0, 0, 0, 0, decimalP, 0, 1-decimalP, 0, 0, 0, 0, 0, 0, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1-decimalP, decimalP, 0, 0, 0, 0, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decimalP, 0, 1-decimalP, 0, 0, 0, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1-decimalP, 0, 0, 0, decimalP, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decimalP, 0, 0, 0, 1-decimalP,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decimalP, 1-decimalP, 0, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1-decimalP, 0, decimalP, 0, 
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decimalP, 0, 1-decimalP,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1-decimalP, 0, 0, 0, 0, decimalP, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decimalP, 0, 0, 0, 0, 0, 1-decimalP,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+                                              ), byrow = T, nrow = 17, ncol = 17)
+  
+  rownames(gameProbabilitiesMatrix) <- c("0-0", "15-0", "0-15", "15-15", "30-0", "0-30", "30-15", "15-30", "40-0", "0-40", "30-30", "40-15", "15-40", "40-30", "30-40", "win", "loss")
+  
+  colnames(gameProbabilitiesMatrix) <- c("0-0", "15-0", "0-15", "15-15", "30-0", "0-30", "30-15", "15-30", "40-0", "0-40", "30-30", "40-15", "15-40", "40-30", "30-40", "win", "loss")
+  
+  return(gameProbabilitiesMatrix)
+  
+}
+
+
+winGameProbability <- function(playerServing, gameState) {
+  # commputes probability of winning a game for the server
+  
+  transitionMatrix <- generateProbabilitiesMatrixGame(playerServing)
+  
+  mcGame <- new("markovchain", states = colnames(transitionMatrix), transitionMatrix = transitionMatrix, name = "Game Markov Chain")
+  
+  gameState <- getState(gameState, colnames(transitionMatrix))
+  
+  # OVO JE UPITNO!!!!!
+  p <- gameState * (mcGame ^ 1000)
+  
+  return(p[1, "win"])
+  
+}
+
+### PRETVARA STRING STANJA U VEKTOR
+getState <- function(stateString, allStates) {
+  stateVector <- integer(length(allStates))
+  for (i in 1:length(stateVector)) {
+    if (allStates[i] == stateString) {
+      stateVector[i] = 1
+      break
+    }
+  }
+  return(stateVector)
+}
+
+
+
+
+
+# --------------------SET FUNCTIONS----------------------------
+
+# Zašto je svejedno tko prvi servira?? --> objasnjeno u nekom clanku
+generateProbabilitiesMatrixSet <- function(player1, player2) {
+  #makes a matrix for set states
+  p1 <- winGameProbability(player1, "0-0")
+  p2 <- winGameProbability(player2, "0-0")
+  
+  
+  setProbabilitiesMatrix <- matrix(data = 0L, byrow = T, ncol = 41, nrow = 41)
+  
+  colnames(setProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "1-1", "2-0", "0-2", "2-1", "3-0", "1-2", "0-3", "4-0", "3-1", "2-2", "1-3", "0-4", "5-0", "4-1", "3-2", "2-3", "1-4", "0-5", "5-1", "4-2", "3-3", "2-4", "1-5", "5-2", "4-3", "3-4", "2-5", "5-3", "4-4", "3-5", "5-4", "4-5", "5-5", "6-5", "5-6", "6-6", "win", "loss")
+
+  rownames(setProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "1-1", "2-0", "0-2", "2-1", "3-0", "1-2", "0-3", "4-0", "3-1", "2-2", "1-3", "0-4", "5-0", "4-1", "3-2", "2-3", "1-4", "0-5", "5-1", "4-2", "3-3", "2-4", "1-5", "5-2", "4-3", "3-4", "2-5", "5-3", "4-4", "3-5", "5-4", "4-5", "5-5", "6-5", "5-6", "6-6", "win", "loss")
+  
+  ##  FILLANJE MATRICE
+  # For petlja koja ubacuje vjerojatnosti prijelaza u matricu
+  for (row_index in 1:nrow(setProbabilitiesMatrix)) {
+    for (col_index in 1:ncol(setProbabilitiesMatrix)) {
+      listSplittedRow <- str_split(rownames(setProbabilitiesMatrix)[row_index], "-")
+      listSplittedCol <- str_split(colnames(setProbabilitiesMatrix)[col_index], "-")
+      rowName <- rownames(setProbabilitiesMatrix)[row_index]
+      colName <- colnames(setProbabilitiesMatrix)[col_index]
+      if (rowName == "win" | rowName == "loss" | colName == "win" | colName == "loss") {
+        if ((rowName == "win" & colName == "win") | (rowName == "loss" & colName == "loss")) {
+          setProbabilitiesMatrix[row_index, col_index] <- 1
+          next
+        } else if ((rowName == "win" & colName != "win") |
+                   (rowName == "loss" & colName != "loss")) {
+          next
+        } else if (((strtoi(listSplittedRow[[1]][1]) == 5 & strtoi(listSplittedRow[[1]][2]) < 5) | (strtoi(listSplittedRow[[1]][1]) == 6 & strtoi(listSplittedRow[[1]][2]) == 5)) & colName == "win") {
+          if ((strtoi(listSplittedRow[[1]][1]) + strtoi(listSplittedRow[[1]][2])) %% 2 == 0) {
+            setProbabilitiesMatrix[row_index, col_index] <- p1
+          } else {
+            setProbabilitiesMatrix[row_index, col_index] <- (1-p2)
+          }
+          next
+        } else if (((strtoi(listSplittedRow[[1]][1]) < 5 & strtoi(listSplittedRow[[1]][2]) == 5) | (strtoi(listSplittedRow[[1]][1]) == 5 & strtoi(listSplittedRow[[1]][2]) == 6)) & colName == "loss") {
+            if ((strtoi(listSplittedRow[[1]][1]) + strtoi(listSplittedRow[[1]][2])) %% 2 == 0) {
+            setProbabilitiesMatrix[row_index, col_index] <- (1-p1)
+          } else {
+            setProbabilitiesMatrix[row_index, col_index] <- p2
+          }
+            next
+        } else if ((strtoi(listSplittedRow[[1]][1]) == 6 & strtoi(listSplittedRow[[1]][2]) == 6) & colName == "win") {
+          setProbabilitiesMatrix[row_index, col_index] <- winTBProbability(player1, player2, "0-0")
+          next
+        } else if ((strtoi(listSplittedRow[[1]][1]) == 6 & strtoi(listSplittedRow[[1]][2]) == 6) & colName == "loss") {
+          setProbabilitiesMatrix[row_index, col_index] <- (1 - winTBProbability(player1, player2, "0-0"))
+          next
+        }
+        next
+      }
+      
+      # Ako nije u win ili loss stupcu/retku
+      intRow1 <- strtoi(listSplittedRow[[1]][1])
+      intRow2 <- strtoi(listSplittedRow[[1]][2])
+      intCol1 <- strtoi(listSplittedCol[[1]][1])
+      intCol2 <- strtoi(listSplittedCol[[1]][2])
+
+      if ((intRow1 + intRow2 + 1) == (intCol1 + intCol2)) {
+        if ((intCol1 > intRow1) & (intCol2 == intRow2)) {
+          if ((intRow1 + intRow2) %% 2 == 0) {
+            setProbabilitiesMatrix[row_index, col_index] <- p1
+          } else {
+            setProbabilitiesMatrix[row_index, col_index] <- (1-p2)
+          }
+        } else if ((intCol1 == intRow1) & (intCol2 > intRow2)) {
+          if ((intRow1 + intRow2) %% 2 == 0) {
+            setProbabilitiesMatrix[row_index, col_index] <- (1-p1)
+          } else {
+            setProbabilitiesMatrix[row_index, col_index] <- p2
+          }
+        }
+      }
+    }
+  }
+
+  
+  return(setProbabilitiesMatrix)
+  
+}
+
+
+
+winSetProbability <- function(player1, player2, setState) {
+  # commputes probability of winning a set for the server
+  
+  transitionMatrix <- generateProbabilitiesMatrixSet(player1, player2)
+  
+  mcSet <- new("markovchain", states = colnames(transitionMatrix), transitionMatrix = transitionMatrix, name = "Set Markov Chain")
+  
+  setState <- getState(setState, colnames(transitionMatrix))
+  
+  # OVO JE UPITNO!!!!!
+  p <- setState * (mcSet ^ 1000)
+  
+  return(p[1, "win"])
+}
+
+
+
+
+
+# --------------------TIE BREAK FUNCTIONS----------------------------
+
+generateProbabilitiesMatrixTB <- function(player1, player2) {
+  p1 <- getPlayerServeProbability(player1)
+  p2 <- getPlayerServeProbability(player2)
+  TBProbabilitiesMatrix <- matrix(data = 0L, byrow = T, nrow = 54, ncol = 54)
+  
+  colnames(TBProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "1-1", "2-0", "0-2", "2-1", "3-0", "1-2", "0-3", "4-0", "3-1", "2-2", "1-3", "0-4", "5-0", "4-1", "3-2", "2-3", "1-4", "0-5", "6-0", "5-1", "4-2", "3-3", "2-4", "1-5", "0-6", "6-1", "5-2", "4-3", "3-4", "2-5", "1-6", "6-2", "5-3", "4-4", "3-5", "2-6", "6-3", "5-4", "4-5", "3-6", "6-4", "5-5", "4-6", "6-5-1", "6-5-2", "5-6-1", "5-6-2", "6-6-1", "6-6-2",  "win", "loss")
+  
+  rownames(TBProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "1-1", "2-0", "0-2", "2-1", "3-0", "1-2", "0-3", "4-0", "3-1", "2-2", "1-3", "0-4", "5-0", "4-1", "3-2", "2-3", "1-4", "0-5", "6-0", "5-1", "4-2", "3-3", "2-4", "1-5", "0-6", "6-1", "5-2", "4-3", "3-4", "2-5", "1-6", "6-2", "5-3", "4-4", "3-5", "2-6", "6-3", "5-4", "4-5", "3-6", "6-4", "5-5", "4-6", "6-5-1", "6-5-2", "5-6-1", "5-6-2", "6-6-1", "6-6-2",  "win", "loss")
+  
+  
+  ##  FILLANJE MATRICE
+  # For petlja koja ubacuje vjerojatnosti prijelaza u matricu
+  igraci <- c(p1, p2)
+  trenutni <- 1
+  for (row_index in 1:nrow(TBProbabilitiesMatrix)) {
+    if (rownames(TBProbabilitiesMatrix)[row_index] != "win" & rownames(TBProbabilitiesMatrix)[row_index] != "loss") {
+      listSplittedRow <- str_split(rownames(TBProbabilitiesMatrix)[row_index], "-")
+      intRow1 <- strtoi(listSplittedRow[[1]][1])
+      intRow2 <- strtoi(listSplittedRow[[1]][2])
+      if (length(listSplittedRow[[1]]) == 3) {
+        trenutni <- strtoi(listSplittedRow[[1]][3])
+      } else {
+        if(((intRow1 + intRow2) %% 4 == 1) | ((intRow1 + intRow2) %% 4 == 2)) {
+          trenutni <- 2
+        } else {
+          trenutni <- 1
+        }
+      }
+      
+    }
+    for (col_index in 1:ncol(TBProbabilitiesMatrix)) {
+      listSplittedRow <- str_split(rownames(TBProbabilitiesMatrix)[row_index], "-")
+      listSplittedCol <- str_split(colnames(TBProbabilitiesMatrix)[col_index], "-")
+      rowName <- rownames(TBProbabilitiesMatrix)[row_index]
+      colName <- colnames(TBProbabilitiesMatrix)[col_index]
+      if (rowName == "win" | rowName == "loss" | colName == "win" | colName == "loss") {
+        if ((rowName == "win" & colName == "win") | (rowName == "loss" & colName == "loss")) {
+          TBProbabilitiesMatrix[row_index, col_index] <- 1
+          next
+        } else if ((rowName == "win" & colName != "win") |
+                   (rowName == "loss" & colName != "loss")) {
+          next
+        } else if (length(listSplittedRow[[1]]) == 3) {
+          if (strtoi(listSplittedRow[[1]][1]) == 6 & strtoi(listSplittedRow[[1]][2]) < 6 & colName == "win") {
+            TBProbabilitiesMatrix[row_index, col_index] <- ifelse(strtoi(listSplittedRow[[1]][3]) == 1, igraci[trenutni], 1-igraci[trenutni])
+            next
+          } else if (((strtoi(listSplittedRow[[1]][1]) < 6 & strtoi(listSplittedRow[[1]][2]) == 6)) & colName == "loss") {
+            TBProbabilitiesMatrix[row_index, col_index] <- ifelse(strtoi(listSplittedRow[[1]][3])==1, 1-igraci[trenutni], igraci[trenutni])
+            next
+          }
+          
+        } else if (((strtoi(listSplittedRow[[1]][1]) == 6 & strtoi(listSplittedRow[[1]][2]) < 6)) & colName == "win") {
+          TBProbabilitiesMatrix[row_index, col_index] <- ifelse(trenutni==1, igraci[trenutni], 1-igraci[trenutni])
+          next
+        } else if (((strtoi(listSplittedRow[[1]][1]) < 6 & strtoi(listSplittedRow[[1]][2]) == 6)) & colName == "loss") {
+          TBProbabilitiesMatrix[row_index, col_index] <- ifelse(trenutni==1, 1-igraci[trenutni], igraci[trenutni])
+          next
+        }
+        next
+      }
+      
+      # Ako nije u win ili loss stupcu/retku
+      intRow1 <- strtoi(listSplittedRow[[1]][1])
+      intRow2 <- strtoi(listSplittedRow[[1]][2])
+      intCol1 <- strtoi(listSplittedCol[[1]][1])
+      intCol2 <- strtoi(listSplittedCol[[1]][2])
+      
+      if (rownames(TBProbabilitiesMatrix)[row_index] == "6-4" & colnames(TBProbabilitiesMatrix)[col_index] == "6-5-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- igraci[trenutni]
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "5-5" & colnames(TBProbabilitiesMatrix)[col_index] == "6-5-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- (1 - igraci[trenutni])
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "4-6" & colnames(TBProbabilitiesMatrix)[col_index] == "5-6-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- (1 - igraci[trenutni])
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "5-5" & colnames(TBProbabilitiesMatrix)[col_index] == "5-6-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- igraci[trenutni]
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "6-5-1" & colnames(TBProbabilitiesMatrix)[col_index] == "6-6-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- (1 - igraci[trenutni])
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "5-6-1" & colnames(TBProbabilitiesMatrix)[col_index] == "6-6-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- igraci[trenutni]
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "6-6-1" & colnames(TBProbabilitiesMatrix)[col_index] == "6-5-2") {
+        TBProbabilitiesMatrix[row_index, col_index] <- igraci[trenutni]
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "6-6-1" & colnames(TBProbabilitiesMatrix)[col_index] == "5-6-2") {
+        TBProbabilitiesMatrix[row_index, col_index] <- (1 - igraci[trenutni])
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "6-6-2" & colnames(TBProbabilitiesMatrix)[col_index] == "6-5-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- (1 - igraci[trenutni])
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "6-6-2" & colnames(TBProbabilitiesMatrix)[col_index] == "5-6-1") {
+        TBProbabilitiesMatrix[row_index, col_index] <- igraci[trenutni]
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "5-6-2" & colnames(TBProbabilitiesMatrix)[col_index] == "6-6-2") {
+        TBProbabilitiesMatrix[row_index, col_index] <- (1 -  igraci[trenutni])
+        next
+      } else if (rownames(TBProbabilitiesMatrix)[row_index] == "6-5-2" & colnames(TBProbabilitiesMatrix)[col_index] == "6-6-2") {
+        TBProbabilitiesMatrix[row_index, col_index] <- igraci[trenutni]
+        next
+      }
+      
+      if (length(listSplittedRow[[1]]) < 3 & rownames(TBProbabilitiesMatrix)[row_index] != "6-4" & rownames(TBProbabilitiesMatrix)[row_index] != "4-6" & rownames(TBProbabilitiesMatrix)[row_index] != "5-5") {
+        if ((intRow1 + intRow2 + 1) == (intCol1 + intCol2)) {
+          if ((intCol1 > intRow1) & (intCol2 == intRow2)) {
+              TBProbabilitiesMatrix[row_index, col_index] <- ifelse(trenutni==1, igraci[trenutni], 1-igraci[trenutni])
+          } else if ((intCol1 == intRow1) & (intCol2 > intRow2)) {
+              TBProbabilitiesMatrix[row_index, col_index] <- ifelse(trenutni==1, 1-igraci[trenutni], igraci[trenutni])
+          }
+        }
+      }
+      
+    }
+  }
+  
+  return(TBProbabilitiesMatrix)
+  
+}
+
+
+winTBProbability <- function(player1, player2, tbState) {
+  # commputes probability of winning a set for the server
+  
+  transitionMatrix <- generateProbabilitiesMatrixTB(player1, player2)
+  
+  mcTB <- new("markovchain", states = colnames(transitionMatrix), transitionMatrix = transitionMatrix, name = "Tie-Break Markov Chain")
+  
+  tbState <- getState(tbState, colnames(transitionMatrix))
+  
+  # OVO JE UPITNO!!!!!
+  p <- tbState * (mcTB ^ 2000)
+  
+  return(p[1, "win"])
+}
+
+
+
+
+
+# --------------------BO3 MATCH FUNCTIONS----------------------------
+
+
+generateProbabilitiesMatrixMatchBO3 <- function(player1, player2) {
+  # Generates probability of transitions for a best of 3 match
+  winSetProb <- winSetProbability(player1, player2, "0-0")
+  
+  matchProbabilitiesMatrix <- matrix(data = c(0, winSetProb, 1-winSetProb, 0, 0, 0,
+                                           0, 0, 0, 1-winSetProb, winSetProb, 0,
+                                           0, 0, 0, winSetProb, 0, 1-winSetProb,
+                                           0, 0, 0, 0, winSetProb, 1-winSetProb,
+                                           0, 0, 0, 0, 1, 0,
+                                           0, 0, 0, 0, 0, 1), byrow = T, nrow = 6, ncol = 6)
+  
+  colnames(matchProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "1-1", "win", "loss")
+  
+  rownames(matchProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "1-1", "win", "loss")
+  
+  return(matchProbabilitiesMatrix)
+  
+}
+
+winBO3MatchProbability <- function(player1, player2, matchState) {
+  # commputes probability of winning a set for the server
+  transitionMatrix <- generateProbabilitiesMatrixMatchBO3(player1, player2)
+  
+  mcBO3Match <- new("markovchain", states = colnames(transitionMatrix), transitionMatrix = transitionMatrix, name = "BO3 Match Markov Chain")
+  
+  matchState <- getState(matchState, colnames(transitionMatrix))
+  
+  # OVO JE UPITNO!!!!!
+  p <- matchState * (mcBO3Match ^ 1000)
+  
+  return(p[1, "win"])
+}
+
+
+
+
+
+# --------------------BO5 MATCH FUNCTIONS----------------------------
+
+generateProbabilitiesMatrixMatchBO5 <- function(player1, player2) {
+  # Generates probability of transitions for a best of 3 match
+  
+  winSetProb <- winSetProbability(player1, player2, "0-0")
+  
+  matchProbabilitiesMatrix <- matrix(data = c(0, winSetProb, 1-winSetProb, 0, 0, 0, 0, 0, 0, 0, 0,
+                                           0, 0, 0, winSetProb, 1-winSetProb, 0, 0, 0, 0, 0, 0,
+                                           0, 0, 0, 0, winSetProb, 1-winSetProb, 0, 0, 0, 0, 0,
+                                           0, 0, 0, 0, 0, 0, 1-winSetProb, 0, 0, winSetProb, 0,
+                                           0, 0, 0, 0, 0, 0, winSetProb, 1-winSetProb, 0, 0, 0,
+                                           0, 0, 0, 0, 0, 0, 0, winSetProb, 0, 0, 1-winSetProb,
+                                           0, 0, 0, 0, 0, 0, 0, 0, 1-winSetProb, winSetProb, 0,
+                                           0, 0, 0, 0, 0, 0, 0, 0, winSetProb, 0, 1-winSetProb,
+                                           0, 0, 0, 0, 0, 0, 0, 0, 0, winSetProb, 1-winSetProb,
+                                           0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1), byrow = T, nrow = 11, ncol = 11)
+  
+  colnames(matchProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "2-0", "1-1", "0-2", "2-1", "1-2", "2-2", "win", "loss")
+  
+  rownames(matchProbabilitiesMatrix) <- c("0-0", "1-0", "0-1", "2-0", "1-1", "0-2", "2-1", "1-2", "2-2", "win", "loss")
+  
+  return(matchProbabilitiesMatrix)
+  
+}
+
+winBO5MatchProbability <- function(player1, player2, matchState) {
+  # commputes probability of winning a set for the server
+  
+  transitionMatrix <- generateProbabilitiesMatrixMatchBO5(player1, player2)
+
+  mcBO5Match <- new("markovchain", states = colnames(transitionMatrix), transitionMatrix = transitionMatrix, name = "BO5 Match Markov Chain")
+  
+   matchState <- getState(matchState, colnames(transitionMatrix))
+  
+  # OVO JE UPITNO!!!!!
+  p <- matchState * (mcBO5Match ^ 1000)
+  
+  return(p[1, "win"])
+  
+}
+
+```
+
+
+```{r}
+library(caret)
+simulirajTurnir <- function(imeTurnira) {
+  samoBitniMarkovTurnir <- samoBitniMarkovMuskarci[samoBitniMarkovMuskarci$Name == imeTurnira]
+
+  rezultat <- select(samoBitniMarkovTurnir, "Home", "Away", "Pobjednik")
+  
+  Predikcija <- c()
+  
+  for (i in 1:nrow(rezultat)) {
+    Predikcija[i] <- winBO5MatchProbability(rezultat[i, c("Home")], rezultat[i, c("Away")], "0-0")
+  }
+  
+  rezultat$Predikcija <- Predikcija
+  
+  rezultat$Predikcija <- round(rezultat$Predikcija, 0)
+  
+  cm <- confusionMatrix(as.factor(rezultat$Predikcija), as.factor(rezultat$Pobjednik))
+  
+  print(cm)
+  
+  pogodeno <- rezultat %>% filter(Pobjednik==Predikcija) %>% count()
+  
+  print(paste0("Postotak pogođenih ishoda meča preko Markovljevih lanaca: ", pogodeno / nrow(rezultat)))
+}
+
+
+```
+
+
+
+### Isprobavanje
+```{r}
+library("markovchain")
+library("dplyr")
+library("igraph")
+
+statistikaIgraca <- statistikaIgraca[statistikaIgraca$postotakOsvojenogServisa < 100 & statistikaIgraca$postotakOsvojenihNaProtivnikovom < 100, ]
+
+samoBitniMarkov <- samoBitni[, c(1,2,3,4,5,6,7, ncol(samoBitni))]
+
+samoBitniMarkov <- merge(samoBitniMarkov, compID, by = "SportEventID")
+samoBitniMarkov <- merge(samoBitniMarkov, competitions[, c(1,2)], by.x = "CompetitionID", by.y = "CompID")
+samoBitniMarkov <- samoBitniMarkov[!(samoBitniMarkov$Name %in% c("WTA MELBOURNE", "WTA PARIS", "WTA LONDON", "WTA NEW YORK", "ATP MELBOURNE", "ATP PARIS", "ATP NEW YORK", "ATP LONDON")),]
+
+samoBitniMarkov <- data.frame(lapply(samoBitniMarkov, function(x) {
+  gsub('(¨)', 'Z', x)
+}))
+
+samoBitniMarkovMuskarci <- samoBitniMarkov[samoBitniMarkov$Home %in% muskarciImena & samoBitniMarkov$Away %in% muskarciImena, ]
+simulirajTurnir("WIMBLEDON")
+
+
+```
+
+#### Brisanje nepotrebnih tablica
+
+```{r}
+#rm(p, away, top10Beton, top10DifferenceFromMeanMen, top10DifferenceFromMeanWomen, top10MatchesMen, top10MatchesUniqueMen, top10MatchesUniqueWomen, top10MatchesWomen, top10MenPercentageOpponentServisBeton, top10MenPercentageOpponentServisOverall, top10MenPercentageOpponentServisTrava, top10MenPercentageOpponentServisZemlja, top10MenPercentageServisBeton, top10MenPercentageServisOverall, top10MenPercentageServisTrava, top10MenPercentageServisZemlja, top10totalPlayerNextPoint, top10totalPlayerNextPointBeton, top10totalPlayerNextPointTrava, top10totalPlayerNextPointZemlja, top10totalPlayerNextTwoPoints, top10totalPlayerTwoPointBeton, top10totalPlayerTwoPointTrava, top10totalPlayerTwoPointZemlja, top10totalWL, top10totalWLMen, top10totalWLWomen, top10Trava, top10WomenPercentageOpponentServisBeton, top10WomenPercentageOpponentServisOverall, top10WomenPercentageOpponentServisTrava, top10WomenPercentageOpponentServisZemlja, top10WomenPercentageServisBeton, top10WomenPercentageServisOverall, top10WomenPercentageServisTrava, top10WomenPercentageServisZemlja, top10Zemlja, top10breakPointsMen, top10breakPointsWomen)
+# 
+#rm(veciOdTisucu, veciOdTisucuMen, veciOdTisucuWomen, menPlotServ, menPlotOppServ, matches, joined, home, homeLostFirstSet, homeMatches, homePlayerPointsBeton, homePlayerPointsTrava, homePlayerPointsZemlja, homePlayers, awayLostFirstSet, awayMatches, awayPlayerPointsBeton, awayPlayerPointsTrava, awayPlayerPointsZemlja, awayPlayers, awayPlayerWonNextPointTrava)
+# 
+#rm(brojac, col_index, colName, decimalP, elem, gameState, igraci, intCol1, intCol2, intRow1, intRow2, matchState, p1, p2, percentagePlayer1, percentagePlayer2, player1, player2, pName, pName1, pName2, row_index, rowName, setState, tbState, trenutni, winSetProb)
+# 
+# rm(betevent, beteventCisti, gameProbabilitiesMatrix, histogram, listSplittedCol, listSplittedRow, markovChain, mcBO3Match, mcBO5Match, mcGame, mcSet, mcTB, prebroji, points, setProbabilitiesMatrix, sportevent, TBProbabilities.df, TBProbabilitiesMatrix, transitionMatrix, statistikaVlastitiProtivnik, statistikaVlastitiProtivnikMen, statistikaVlastitiProtivnikWomen)
+# 
+# 
+# rm(splitRowResult, sets, sortedBeton, sortedTrava, sortedZemlja, womenPlotOppServ, womenPlotServ, qrm, qrw, qsm, qsw)
+
+```
+
